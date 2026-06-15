@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-func PostEthNode(payload string, cur string) ([]byte, error) {
-	url := GetNodeURL(cur)
+func PostEthNode(payload string, chain string) ([]byte, error) {
+	url := GetNodeURL(chain)
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -31,7 +31,16 @@ func PostEthNode(payload string, cur string) ([]byte, error) {
 	return body, nil
 }
 
-func Broadcast(raw []byte, cur string) ([]byte, error) {
+func readResult(body []byte) (string, error) {
+	var js map[string]interface{}
+	json.Unmarshal(body, &js)
+	if js["result"] == nil {
+		return "", errors.New("\"result\"カラムなし")
+	}
+	return js["result"].(string), nil
+}
+
+func Broadcast(raw []byte, chain string) ([]byte, error) {
 	payload := `{
 	"jsonrpc":"2.0",
 	"method":"eth_sendRawTransaction",
@@ -40,19 +49,15 @@ func Broadcast(raw []byte, cur string) ([]byte, error) {
 	],
 	"id":1
 	}`
-	body, err := PostEthNode(payload, cur)
+	body, err := PostEthNode(payload, chain)
 	if err != nil {
 		return nil, err
 	}
-	var buf map[string]interface{}
-	json.Unmarshal(body, &buf)
-	if buf["result"] != nil {
-		result := buf["result"].(string)
-		if result != "" {
-			return []byte("SUCCEED: " + result), nil
-		}
+	result, err := readResult(body)
+	if err != nil {
+		return body, err
 	}
-	return body, nil
+	return []byte("SUCCEED: " + result), nil
 }
 
 func GetBalance(addr string, chain string) (*big.Int, error) {
@@ -69,13 +74,11 @@ func GetBalance(addr string, chain string) (*big.Int, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	var js map[string]interface{}
-	json.Unmarshal(body, &js)
-	if js["result"] == nil {
+	result, err := readResult(body)
+	if err != nil {
 		return nil, errors.New("取得失敗")
 	}
-	n3, _ := new(big.Int).SetString(js["result"].(string), 0)
+	n3, _ := new(big.Int).SetString(result, 0)
 	return n3, nil
 }
 
@@ -98,14 +101,12 @@ func GetTokenBalance(addr string, chain string, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	var js map[string]interface{}
-	json.Unmarshal(body, &js)
-	if js["result"] == nil {
-		jsbyte, _ := json.Marshal(js)
+	result, err := readResult(body)
+	if err != nil {
+		jsbyte, _ := json.Marshal(body)
 		return string(jsbyte), errors.New("取得失敗")
 	}
-	n3, _ := new(big.Int).SetString(js["result"].(string), 0)
+	n3, _ := new(big.Int).SetString(result, 0)
 	balstr := n3.String()
 	return IntstrToFloatstr(balstr, decimal), nil
 }
@@ -124,13 +125,11 @@ func GetNonce(addr string, chain string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	var js map[string]interface{}
-	json.Unmarshal(body, &js)
-	if js["result"] == "" {
-		return nil, errors.New("取得失敗")
+	result, err := readResult(body)
+	if err != nil {
+		return nil, err
 	}
-	ans, _ := hex.DecodeString(PureHex(js["result"].(string)))
+	ans, _ := hex.DecodeString(PureHex(result))
 	return ans, nil
 }
 
@@ -162,4 +161,34 @@ func ReadBaseFee(chaininfo []byte) (uint64, error) {
 	basefeehex := PureHex(bfpg)
 	basefeeBytes, _ := hex.DecodeString(basefeehex)
 	return BytesToInt(basefeeBytes), nil
+}
+
+func GetBaseFee(chain string) (uint64, error) {
+	chainInfo, err := GetChainInfo(chain)
+	if err != nil {
+		return 0, err
+	}
+	basefee, err := ReadBaseFee(chainInfo)
+	if err != nil {
+		return 0, err
+	}
+	if basefee != 0 {
+		return basefee, nil
+	}
+	payload := `{
+	"jsonrpc":"2.0",
+	"method":"eth_gasPrice",
+	"params":[],
+	"id":1
+	}`
+	body, err := PostEthNode(payload, chain)
+	if err != nil {
+		return 0, err
+	}
+	result, err := readResult(body)
+	if err != nil {
+		return 0, err
+	}
+	ans, _ := hex.DecodeString(PureHex(result))
+	return uint64(BytesToInt(ans)), nil
 }

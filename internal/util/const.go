@@ -8,23 +8,26 @@ import (
 )
 
 const (
-	ETH_URL = "https://ethereum-rpc.publicnode.com"
-	BNB_URL = "https://bsc-rpc.publicnode.com"
-	POL_URL = "https://polygon.publicnode.com"
-	ETH_ID  = 0x01
-	BNB_ID  = 0x38
-	POL_ID  = 0x89
+	ETH_URL  = "https://ethereum-rpc.publicnode.com"
+	BNB_URL  = "https://bsc-rpc.publicnode.com"
+	POL_URL  = "https://polygon.publicnode.com"
+	AVAX_URL = "https://avalanche-rpc.publicnode.com"
+	ARB_URL  = "https://arbitrum-rpc.publicnode.com/"
 )
 
 func GetChainId(cur string) []byte {
 	curUp := strings.ToUpper(cur)
 	switch curUp {
 	case "ETH":
-		return []byte{ETH_ID}
+		return []byte{0x01}
 	case "BNB":
-		return []byte{BNB_ID}
+		return []byte{0x38}
 	case "POL":
-		return []byte{POL_ID}
+		return []byte{0x89}
+	case "AVAX":
+		return []byte{0xa8, 0x6a}
+	case "ARB":
+		return []byte{0xa4, 0xb1}
 	}
 	return nil
 }
@@ -38,6 +41,10 @@ func GetNodeURL(cur string) string {
 		return BNB_URL
 	case "POL":
 		return POL_URL
+	case "AVAX":
+		return AVAX_URL
+	case "ARB":
+		return ARB_URL
 	}
 	return ""
 }
@@ -65,6 +72,10 @@ func ValidChain(chain string) bool {
 	case "BNB":
 		fallthrough
 	case "POL":
+		fallthrough
+	case "AVAX":
+		fallthrough
+	case "ARB":
 		return true
 	}
 	return false

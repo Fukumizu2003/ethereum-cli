@@ -27,8 +27,11 @@ var getinfoCmd = &cobra.Command{
 		}
 		if getBasefee {
 			chain := config.GetMainAccount().Chain
-			chaininfo, _ := util.GetChainInfo(chain)
-			basefee, _ := util.ReadBaseFee(chaininfo)
+			basefee, err := util.GetBaseFee(chain)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			about := basefee - basefee%1000000
 			gwei := util.GweiToEth(strconv.Itoa(int(about)))
 			fmt.Println(gwei + " Gwei")

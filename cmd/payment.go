@@ -50,8 +50,11 @@ var paymentCmd = &cobra.Command{
 		chainPay := ac.Chain
 		address := ac.Address
 		nonce, _ := util.GetNonce(address, chainPay)
-		chaininfo, err := util.GetChainInfo(chainPay)
-		basefeeWei, _ := util.ReadBaseFee(chaininfo)
+		basefeeWei, err := util.GetBaseFee(chainPay)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		to := util.NameToAddress(sendTo)
 		toBytes, _ := hex.DecodeString(util.PureHex(strings.ToLower(to)))
 		tx := util.NewTx()
@@ -105,16 +108,16 @@ var paymentCmd = &cobra.Command{
 				} else {
 					feewei := util.EthToGwei(feeAbout)
 					feepergas := feewei / glInt
-					maxpriorityfeepargas := feepergas / 10
+					maxpriorityfeepergas := feepergas / 10
 					maxfeepergas := feepergas * 2
 					fmt.Print("Estimated fee: ")
-					fmt.Print((basefeeWei + uint64(maxpriorityfeepargas)) * uint64(glInt) / 1000000000)
+					fmt.Print((basefeeWei + uint64(maxpriorityfeepergas)) * uint64(glInt) / 1000000000)
 					fmt.Println(" Gwei")
 					fmt.Print("Max fee:       ")
 					fmt.Print(maxfeepergas * glInt / 1000000000)
 					fmt.Println(" Gwei")
-					tx.MaxFeePerGas = util.IntToBytes(uint64(maxpriorityfeepargas))
-					tx.MaxPriorityFeePerGas = util.IntToBytes(uint64(maxfeepergas))
+					tx.MaxFeePerGas = util.IntToBytes(uint64(maxfeepergas))
+					tx.MaxPriorityFeePerGas = util.IntToBytes(uint64(maxpriorityfeepergas))
 				}
 			} else {
 				feewei := util.EthToGwei(feeAbout)

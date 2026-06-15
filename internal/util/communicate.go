@@ -55,7 +55,7 @@ func Broadcast(raw []byte, cur string) ([]byte, error) {
 	return body, nil
 }
 
-func GetBalance(addr string, cur string) (*big.Int, error) {
+func GetBalance(addr string, chain string) (*big.Int, error) {
 	payload := `{
 	"jsonrpc":"2.0",
 	"method":"eth_getBalance",
@@ -65,21 +65,52 @@ func GetBalance(addr string, cur string) (*big.Int, error) {
 	],
 	"id":1
 	}`
-	body, err := PostEthNode(payload, cur)
+	body, err := PostEthNode(payload, chain)
 	if err != nil {
 		return nil, err
 	}
 
 	var js map[string]interface{}
 	json.Unmarshal(body, &js)
-	if js["result"] == "" {
+	if js["result"] == nil {
 		return nil, errors.New("取得失敗")
 	}
 	n3, _ := new(big.Int).SetString(js["result"].(string), 0)
 	return n3, nil
 }
 
-func GetNonce(addr string, cur string) ([]byte, error) {
+func GetTokenBalance(addr string, chain string, token string) (string, error) {
+	decimal, id := TokenInfo(chain, token)
+	idhex := hex.EncodeToString(id)
+	payload := `{
+	"jsonrpc":"2.0",
+	"method":"eth_call",
+	"params":[
+		{
+			"to":"0x` + idhex + `",
+			"data":"0x70a08231000000000000000000000000` + PureHex(addr) + `"
+		},
+		"latest"
+	],
+	"id":1
+	}`
+	body, err := PostEthNode(payload, chain)
+	if err != nil {
+		return "", err
+	}
+
+	var js map[string]interface{}
+	json.Unmarshal(body, &js)
+	if js["result"] == nil {
+		jsbyte, _ := json.Marshal(js)
+		return string(jsbyte), errors.New("取得失敗")
+	}
+	n3, _ := new(big.Int).SetString(js["result"].(string), 0)
+	balstr := n3.String()
+	return IntstrToFloatstr(balstr, decimal), nil
+}
+
+func GetNonce(addr string, chain string) ([]byte, error) {
 	payload := `{
 	"jsonrpc":"2.0",
 	"method":"eth_getTransactionCount",
@@ -89,7 +120,7 @@ func GetNonce(addr string, cur string) ([]byte, error) {
 	],
 	"id":1
 	}`
-	body, err := PostEthNode(payload, cur)
+	body, err := PostEthNode(payload, chain)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +134,7 @@ func GetNonce(addr string, cur string) ([]byte, error) {
 	return ans, nil
 }
 
-func GetChainInfo(cur string) ([]byte, error) {
+func GetChainInfo(chain string) ([]byte, error) {
 	payload := `{
 	"jsonrpc":"2.0",
 	"method":"eth_getBlockByNumber",
@@ -113,7 +144,7 @@ func GetChainInfo(cur string) ([]byte, error) {
 	],
 	"id":1
 	}`
-	body, err := PostEthNode(payload, cur)
+	body, err := PostEthNode(payload, chain)
 	if err != nil {
 		return nil, err
 	}

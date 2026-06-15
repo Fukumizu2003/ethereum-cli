@@ -42,12 +42,30 @@ func GetNodeURL(cur string) string {
 	return ""
 }
 
-func TokenInfo(cur string) (int, []byte) {
-	cur = strings.ToUpper(cur)
+func TokenInfo(chain string, token string) (int, []byte) {
+	chain = strings.ToUpper(chain)
+	token = strings.ToUpper(token)
 	var data map[string]interface{}
 	b, _ := os.ReadFile(RelativeToAbsolute("ref", "const.json"))
 	json.Unmarshal(b, &data)
-	info := data[cur].(map[string]interface{})
-	id, _ := hex.DecodeString(PureHex(info["ID"].(string)))
-	return int(info["DECIMAL"].(float64)), id
+	info := data[chain].(map[string]interface{})
+	pair := info[token].(map[string]interface{})
+	var id []byte
+	if pair["ID"] != nil {
+		id, _ = hex.DecodeString(PureHex(pair["ID"].(string)))
+	}
+	return int(pair["DECIMAL"].(float64)), id
+}
+
+func ValidChain(chain string) bool {
+	chain = strings.ToUpper(chain)
+	switch chain {
+	case "ETH":
+		fallthrough
+	case "BNB":
+		fallthrough
+	case "POL":
+		return true
+	}
+	return false
 }

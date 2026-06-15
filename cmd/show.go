@@ -19,7 +19,7 @@ var showAll bool
 var showGwei bool
 var showWei bool
 
-var curShow string
+var showToken string
 
 // showCmd represents the show command
 var showCmd = &cobra.Command{
@@ -43,25 +43,36 @@ var showCmd = &cobra.Command{
 				util.ShowQRCode(ac.Address)
 			} else if showBalance {
 				ac := config.GetMainAccount()
-				balance, err := util.GetBalance(ac.Address, curShow)
-				if err != nil {
-					fmt.Println("情報取得失敗")
-					return
+				chain := ac.Chain
+				if showToken == "" {
+					balance, err := util.GetBalance(ac.Address, chain)
+					if err != nil {
+						fmt.Println("情報取得失敗")
+						return
+					}
+					weistr := balance.String()
+					if showWei {
+						fmt.Println("Balance: " + weistr + " wei")
+						return
+					}
+					if showGwei {
+						fmt.Println("Balance: " + util.GweiToEth(weistr) + " Gwei")
+						return
+					}
+					ethstr := util.WeiToEth(weistr)
+					if len(ethstr) > 11 {
+						ethstr = string([]rune(ethstr)[:11])
+					}
+					fmt.Println("Balance: " + ethstr + " " + strings.ToUpper(chain))
+				} else {
+					balance, err := util.GetTokenBalance(ac.Address, chain, showToken)
+					if err != nil {
+						fmt.Println("情報取得失敗")
+						fmt.Println(balance)
+						return
+					}
+					fmt.Println("Balance: " + balance + " " + strings.ToUpper(showToken))
 				}
-				weistr := balance.String()
-				if showWei {
-					fmt.Println("Balance: " + weistr + " wei")
-					return
-				}
-				if showGwei {
-					fmt.Println("Balance: " + util.GweiToEth(weistr) + " Gwei")
-					return
-				}
-				ethstr := util.WeiToEth(weistr)
-				if len(ethstr) > 11 {
-					ethstr = string([]rune(ethstr)[:11])
-				}
-				fmt.Println("Balance: " + ethstr + " " + strings.ToUpper(curShow))
 			}
 		}
 	},
@@ -75,5 +86,5 @@ func init() {
 	showCmd.Flags().BoolVar(&showAll, "all", false, "")
 	showCmd.Flags().BoolVar(&showGwei, "gwei", false, "")
 	showCmd.Flags().BoolVar(&showWei, "wei", false, "")
-	showCmd.Flags().StringVarP(&curShow, "chain", "c", "ETH", "")
+	showCmd.Flags().StringVar(&showToken, "token", "", "")
 }

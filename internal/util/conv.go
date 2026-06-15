@@ -191,6 +191,25 @@ func DecstrToBigint(amstr string, dec int) *big.Int {
 	}
 }
 
+func IntstrToFloatstr(amstr string, digits int) string {
+	var str, f, l string
+	if len(amstr) > digits {
+		f = amstr[:len(amstr)-digits]
+		l = amstr[len(amstr)-digits:]
+	} else {
+		f = "0"
+		l = strings.Repeat("0", digits-len(amstr)) + amstr
+	}
+	str = f + "." + l
+	for str[len(str)-1] == '0' {
+		str = str[:len(str)-1]
+	}
+	if str[len(str)-1] == '.' {
+		str = str + "0"
+	}
+	return str
+}
+
 func RLPconv(origin []byte, savezero bool) []byte {
 	begin := 0
 	if !savezero {

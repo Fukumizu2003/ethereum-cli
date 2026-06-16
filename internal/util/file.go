@@ -2,6 +2,8 @@ package util
 
 import (
 	"encoding/csv"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"os"
 )
@@ -97,4 +99,17 @@ func CheckName(acs [][]string, dss [][]string, name string) bool {
 
 func SaveResp(data []byte) {
 	os.WriteFile(RelativeToAbsolute("temp", "resp.json"), data, 0644)
+}
+
+func ReadBaseFee(chaininfo []byte) (uint64, error) {
+	var data map[string]interface{}
+	json.Unmarshal(chaininfo, &data)
+	result := data["result"].(map[string]interface{})
+	if result == nil {
+		return 0, errors.New("情報取得失敗")
+	}
+	bfpg := result["baseFeePerGas"].(string)
+	basefeehex := PureHex(bfpg)
+	basefeeBytes, _ := hex.DecodeString(basefeehex)
+	return BytesToInt(basefeeBytes), nil
 }

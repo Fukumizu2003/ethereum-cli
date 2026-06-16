@@ -13,6 +13,7 @@ import (
 
 var mainAcName string
 var setChain string
+var ankrApiKey string
 
 // setCmd represents the set command
 var setCmd = &cobra.Command{
@@ -20,8 +21,12 @@ var setCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if mainAcName == "" && setChain == "" {
+		if mainAcName == "" && setChain == "" && ankrApiKey == "" {
 			return fmt.Errorf("設定内容を指定してください。\nアカウント変更: -n <アカウント名>\nチェーン変更: -c <チェーン名>\n対応チェーン: ETH, BNB, POL")
+		}
+		if ankrApiKey != "" {
+			config.AnkrAPIKeySet(ankrApiKey)
+			return nil
 		}
 		var newstate *config.State
 		if mainAcName != "" {
@@ -48,4 +53,5 @@ func init() {
 
 	setCmd.Flags().StringVarP(&mainAcName, "name", "n", "", "")
 	setCmd.Flags().StringVarP(&setChain, "chain", "c", "", "")
+	setCmd.Flags().StringVar(&ankrApiKey, "apikey", "", "")
 }

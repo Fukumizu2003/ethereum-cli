@@ -1,12 +1,12 @@
 package config
 
 import (
-	"encoding/json"
 	"errors"
 	"ethereum-cli/internal/util"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 type State struct {
@@ -15,8 +15,6 @@ type State struct {
 	Address string
 	Key     string
 }
-
-type Config struct{}
 
 func ChangeMainAccount(address string) (*State, error) {
 	var state State
@@ -43,22 +41,43 @@ func SetMainChain(chain string) (*State, error) {
 		return nil, errors.New("非対応チェーンです。")
 	}
 	chain = strings.ToUpper(chain)
-	var state State
-	util.MkdirOrNothing("ref")
-	f, _ := os.ReadFile(filepath.Join("ref", "state.json"))
-	json.Unmarshal(f, &state)
+	state := GetMainAccount()
 	state.Chain = chain
-	return &state, nil
+	return state, nil
 }
 
 func GetMainAccount() *State {
+	godotenv.Load()
 	var state State
-	f, _ := os.ReadFile(filepath.Join("ref", "state.json"))
-	json.Unmarshal(f, &state)
+	state.Name = os.Getenv("NAME")
+	state.Chain = os.Getenv("CHAIN")
+	state.Address = os.Getenv("ADDRESS")
+	state.Key = os.Getenv("PRIVKEY_ENCRYPTED")
 	return &state
 }
 
 func SaveConfig(st State) {
-	stateSave, _ := json.MarshalIndent(st, "", "    ")
-	os.WriteFile(filepath.Join("ref", "state.json"), stateSave, 0644)
+	curr, err := godotenv.Read(".env")
+	if err != nil {
+		curr = make(map[string]string)
+	}
+	curr["NAME"] = st.Name
+	curr["CHAIN"] = st.Chain
+	curr["ADDRESS"] = st.Address
+	curr["PRIVKEY_ENCRYPTED"] = st.Key
+	godotenv.Write(curr, ".env")
+}
+
+func AnkrAPIKey() string {
+	godotenv.Load()
+	return os.Getenv("ANKR_API")
+}
+
+func AnkrAPIKeySet(key string) {
+	curr, err := godotenv.Read(".env")
+	if err != nil {
+		curr = make(map[string]string)
+	}
+	curr["ANKR_API"] = key
+	godotenv.Write(curr, ".env")
 }

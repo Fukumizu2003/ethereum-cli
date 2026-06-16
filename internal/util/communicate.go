@@ -11,8 +11,7 @@ import (
 	"time"
 )
 
-func PostEthNode(payload string, chain string) ([]byte, error) {
-	url := GetNodeURL(chain)
+func PostHTTP(payload string, url string) ([]byte, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -28,6 +27,15 @@ func PostEthNode(payload string, chain string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
+	return body, nil
+}
+
+func PostEthNode(payload string, chain string) ([]byte, error) {
+	url := GetNodeURL(chain)
+	body, err := PostHTTP(payload, url)
+	if err != nil {
+		return nil, err
+	}
 	return body, nil
 }
 
@@ -150,19 +158,6 @@ func GetChainInfo(chain string) ([]byte, error) {
 	return body, nil
 }
 
-func ReadBaseFee(chaininfo []byte) (uint64, error) {
-	var data map[string]interface{}
-	json.Unmarshal(chaininfo, &data)
-	result := data["result"].(map[string]interface{})
-	if result == nil {
-		return 0, errors.New("情報取得失敗")
-	}
-	bfpg := result["baseFeePerGas"].(string)
-	basefeehex := PureHex(bfpg)
-	basefeeBytes, _ := hex.DecodeString(basefeehex)
-	return BytesToInt(basefeeBytes), nil
-}
-
 func GetBaseFee(chain string) (uint64, error) {
 	chainInfo, err := GetChainInfo(chain)
 	if err != nil {
@@ -172,9 +167,10 @@ func GetBaseFee(chain string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if basefee != 0 {
-		return basefee, nil
-	}
+	return basefee, nil
+}
+
+func GetGasPrice(chain string) (uint64, error) {
 	payload := `{
 	"jsonrpc":"2.0",
 	"method":"eth_gasPrice",

@@ -49,21 +49,6 @@ func GetNodeURL(cur string) string {
 	return ""
 }
 
-func TokenInfo(chain string, token string) (int, []byte) {
-	chain = strings.ToUpper(chain)
-	token = strings.ToUpper(token)
-	var data map[string]interface{}
-	b, _ := os.ReadFile(RelativeToAbsolute("ref", "const.json"))
-	json.Unmarshal(b, &data)
-	info := data[chain].(map[string]interface{})
-	pair := info[token].(map[string]interface{})
-	var id []byte
-	if pair["ID"] != nil {
-		id, _ = hex.DecodeString(PureHex(pair["ID"].(string)))
-	}
-	return int(pair["DECIMAL"].(float64)), id
-}
-
 func ValidChain(chain string) bool {
 	chain = strings.ToUpper(chain)
 	switch chain {
@@ -79,4 +64,19 @@ func ValidChain(chain string) bool {
 		return true
 	}
 	return false
+}
+
+func TokenInfo(chain string, token string) (int, []byte) {
+	chain = strings.ToUpper(chain)
+	token = strings.ToUpper(token)
+	var data map[string]interface{}
+	b, _ := os.ReadFile(RelativeToAbsolute("ref", "const.json"))
+	json.Unmarshal(b, &data)
+	info := data[chain].(map[string]interface{})
+	pair := info[token].(map[string]interface{})
+	var id []byte
+	if pair["ID"] != nil {
+		id, _ = hex.DecodeString(PureHex(pair["ID"].(string)))
+	}
+	return int(pair["DECIMAL"].(float64)), id
 }

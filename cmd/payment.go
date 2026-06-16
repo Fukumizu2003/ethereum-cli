@@ -55,6 +55,14 @@ var paymentCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
+		feeWeiToCalc := basefeeWei
+		if basefeeWei == 0 {
+			feeWeiToCalc, err = util.GetGasPrice(chainPay)
+		}
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		to := util.NameToAddress(sendTo)
 		toBytes, _ := hex.DecodeString(util.PureHex(strings.ToLower(to)))
 		tx := util.NewTx()
@@ -62,7 +70,8 @@ var paymentCmd = &cobra.Command{
 			util.InitNativeTx(&tx, chainPay)
 			glInt = 21000
 			if gasLimit != "" {
-				glInt, _ = strconv.Atoi(gasLimit)
+				gl, _ := strconv.Atoi(gasLimit)
+				glInt = gl
 				tx.GasLimit = util.IntToBytes(uint64(glInt))
 			}
 			tx.Nonce = nonce
@@ -75,27 +84,30 @@ var paymentCmd = &cobra.Command{
 				tx.Value = util.EthToWei(amountStr)
 				if maxfeeGweiStr != "" {
 					maxfeewei := util.EthToGwei(maxfeeGweiStr)
-					if uint64(maxfeewei) < basefeeWei*uint64(glInt) {
+					if uint64(maxfeewei) < feeWeiToCalc*uint64(glInt) {
 						fmt.Print("指定の最大手数料では不足です。\n現在の最低手数料: ")
-						fmt.Print(basefeeWei * uint64(glInt) / 1000000000)
+						fmt.Print(feeWeiToCalc * uint64(glInt) / 1000000000)
 						fmt.Println(" Gwei")
 						return
 					}
 					maxfeepergas := maxfeewei / glInt
-					maxpriorityfeepargas := basefeeWei / 5
+					maxpriorityfeepergas := basefeeWei / 5
+					if basefeeWei == 0 {
+						maxpriorityfeepergas = uint64(maxfeepergas)
+					}
 					fmt.Print("Estimated fee: ")
-					fmt.Print((basefeeWei + maxpriorityfeepargas) * uint64(glInt) / 1000000000)
+					fmt.Print((basefeeWei + maxpriorityfeepergas) * uint64(glInt) / 1000000000)
 					fmt.Println(" Gwei")
 					fmt.Print("Max fee:       ")
 					fmt.Print(maxfeepergas * glInt / 1000000000)
 					fmt.Println(" Gwei")
 					tx.MaxFeePerGas = util.IntToBytes(uint64(maxfeepergas))
-					tx.MaxPriorityFeePerGas = util.IntToBytes(maxpriorityfeepargas)
+					tx.MaxPriorityFeePerGas = util.IntToBytes(maxpriorityfeepergas)
 				} else if feeAbout != "" {
 					feewei := util.EthToGwei(feeAbout)
-					if uint64(feewei) < basefeeWei*uint64(glInt) {
+					if uint64(feewei) < feeWeiToCalc*uint64(glInt) {
 						fmt.Print("指定の最大手数料では不足です。\n現在の最低手数料: ")
-						fmt.Print(basefeeWei * uint64(glInt) / 1000000000)
+						fmt.Print(feeWeiToCalc * uint64(glInt) / 1000000000)
 						fmt.Println(" Gwei")
 						return
 					}
@@ -106,24 +118,26 @@ var paymentCmd = &cobra.Command{
 					tx.MaxFeePerGas = util.IntToBytes(uint64(feepergas))
 					tx.MaxPriorityFeePerGas = util.IntToBytes(uint64(feepergas))
 				} else {
-					feewei := util.EthToGwei(feeAbout)
-					feepergas := feewei / glInt
+					feepergas := feeWeiToCalc
 					maxpriorityfeepergas := feepergas / 10
 					maxfeepergas := feepergas * 2
+					if basefeeWei == 0 {
+						maxpriorityfeepergas = uint64(maxfeepergas)
+					}
 					fmt.Print("Estimated fee: ")
 					fmt.Print((basefeeWei + uint64(maxpriorityfeepergas)) * uint64(glInt) / 1000000000)
 					fmt.Println(" Gwei")
 					fmt.Print("Max fee:       ")
-					fmt.Print(maxfeepergas * glInt / 1000000000)
+					fmt.Print(maxfeepergas * uint64(glInt) / 1000000000)
 					fmt.Println(" Gwei")
 					tx.MaxFeePerGas = util.IntToBytes(uint64(maxfeepergas))
 					tx.MaxPriorityFeePerGas = util.IntToBytes(uint64(maxpriorityfeepergas))
 				}
 			} else {
 				feewei := util.EthToGwei(feeAbout)
-				if uint64(feewei) < basefeeWei*uint64(glInt) {
+				if uint64(feewei) < feeWeiToCalc*uint64(glInt) {
 					fmt.Print("指定の手数料では不足です。\n現在の最低手数料: ")
-					fmt.Print(basefeeWei * uint64(glInt) / 1000000000)
+					fmt.Print(feeWeiToCalc * uint64(glInt) / 1000000000)
 					fmt.Println(" Gwei")
 					return
 				}
@@ -148,30 +162,33 @@ var paymentCmd = &cobra.Command{
 			tx.Nonce = nonce
 			glInt := 100000
 			if gasLimit != "" {
-				preglInt, _ := strconv.Atoi(gasLimit)
-				glInt = preglInt
+				gl, _ := strconv.Atoi(gasLimit)
+				glInt = gl
 				tx.GasLimit = util.IntToBytes(uint64(glInt))
 			}
-			maxfeewei := basefeeWei * 2
+			maxfeewei := feeWeiToCalc * uint64(glInt*2)
 			if maxfeeGweiStr != "" {
 				maxfeewei = uint64(util.EthToGwei(maxfeeGweiStr))
-				if maxfeewei < basefeeWei*uint64(glInt) {
+				if maxfeewei < feeWeiToCalc*uint64(glInt) {
 					fmt.Print("指定の最大手数料では不足です。\n現在の最低手数料: ")
-					fmt.Print(basefeeWei * uint64(glInt) / 1000000000)
+					fmt.Print(feeWeiToCalc * uint64(glInt) / 1000000000)
 					fmt.Println(" Gwei")
 					return
 				}
 			}
 			maxfeepergas := maxfeewei / uint64(glInt)
-			maxpriorityfeepargas := basefeeWei / 5
+			maxpriorityfeepergas := basefeeWei / 5
+			if basefeeWei == 0 {
+				maxpriorityfeepergas = maxfeepergas
+			}
 			fmt.Print("Estimated fee: ")
-			fmt.Print((basefeeWei + maxpriorityfeepargas) * uint64(glInt) / 1000000000)
+			fmt.Print((basefeeWei + maxpriorityfeepergas) * uint64(glInt) / 1000000000)
 			fmt.Println(" Gwei")
 			fmt.Print("Max fee:       ")
 			fmt.Print(maxfeepergas * uint64(glInt) / 1000000000)
 			fmt.Println(" Gwei")
 			tx.MaxFeePerGas = util.IntToBytes(uint64(maxfeepergas))
-			tx.MaxPriorityFeePerGas = util.IntToBytes(maxpriorityfeepargas)
+			tx.MaxPriorityFeePerGas = util.IntToBytes(maxpriorityfeepergas)
 			decimal, id := util.TokenInfo(chainPay, token)
 			tx.To = id
 			dataField := []byte{}

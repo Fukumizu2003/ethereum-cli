@@ -13,6 +13,7 @@ const (
 	POL_URL  = "https://polygon.publicnode.com"
 	AVAX_URL = "https://avalanche-rpc.publicnode.com"
 	ARB_URL  = "https://arbitrum-rpc.publicnode.com/"
+	HYPE_URL = "https://rpc.hyperliquid.xyz/evm"
 )
 
 func GetChainId(cur string) []byte {
@@ -28,6 +29,8 @@ func GetChainId(cur string) []byte {
 		return []byte{0xa8, 0x6a}
 	case "ARB":
 		return []byte{0xa4, 0xb1}
+	case "HYPE":
+		return []byte{0x03, 0xe7}
 	}
 	return nil
 }
@@ -45,6 +48,8 @@ func GetNodeURL(cur string) string {
 		return AVAX_URL
 	case "ARB":
 		return ARB_URL
+	case "HYPE":
+		return HYPE_URL
 	}
 	return ""
 }
@@ -61,6 +66,8 @@ func ValidChain(chain string) bool {
 	case "AVAX":
 		fallthrough
 	case "ARB":
+		fallthrough
+	case "HYPE":
 		return true
 	}
 	return false

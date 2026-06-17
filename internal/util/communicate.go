@@ -152,6 +152,7 @@ func GetChainInfo(chain string) ([]byte, error) {
 	"id":1
 	}`
 	body, err := PostEthNode(payload, chain)
+	SaveResp(body)
 	if err != nil {
 		return nil, err
 	}

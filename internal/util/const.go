@@ -11,8 +11,6 @@ const (
 	ETH_URL  = "https://ethereum-rpc.publicnode.com"
 	BNB_URL  = "https://bsc-rpc.publicnode.com"
 	POL_URL  = "https://polygon.publicnode.com"
-	AVAX_URL = "https://avalanche-rpc.publicnode.com"
-	ARB_URL  = "https://arbitrum-rpc.publicnode.com/"
 	HYPE_URL = "https://rpc.hyperliquid.xyz/evm"
 )
 
@@ -25,10 +23,6 @@ func GetChainId(cur string) []byte {
 		return []byte{0x38}
 	case "POL":
 		return []byte{0x89}
-	case "AVAX":
-		return []byte{0xa8, 0x6a}
-	case "ARB":
-		return []byte{0xa4, 0xb1}
 	case "HYPE":
 		return []byte{0x03, 0xe7}
 	}
@@ -44,10 +38,6 @@ func GetNodeURL(cur string) string {
 		return BNB_URL
 	case "POL":
 		return POL_URL
-	case "AVAX":
-		return AVAX_URL
-	case "ARB":
-		return ARB_URL
 	case "HYPE":
 		return HYPE_URL
 	}
@@ -63,10 +53,6 @@ func ValidChain(chain string) bool {
 		fallthrough
 	case "POL":
 		fallthrough
-	case "AVAX":
-		fallthrough
-	case "ARB":
-		fallthrough
 	case "HYPE":
 		return true
 	}
@@ -77,7 +63,7 @@ func TokenInfo(chain string, token string) (int, []byte) {
 	chain = strings.ToUpper(chain)
 	token = strings.ToUpper(token)
 	var data map[string]interface{}
-	b, _ := os.ReadFile(RelativeToAbsolute("ref", "const.json"))
+	b, _ := os.ReadFile(RelativeToAbsolute("ref", "ETH_const.json"))
 	json.Unmarshal(b, &data)
 	info := data[chain].(map[string]interface{})
 	pair := info[token].(map[string]interface{})

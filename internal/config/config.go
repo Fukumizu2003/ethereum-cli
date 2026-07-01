@@ -49,10 +49,10 @@ func SetMainChain(chain string) (*State, error) {
 func GetMainAccount() *State {
 	godotenv.Load()
 	var state State
-	state.Name = os.Getenv("NAME")
-	state.Chain = os.Getenv("CHAIN")
-	state.Address = os.Getenv("ADDRESS")
-	state.Key = os.Getenv("PRIVKEY_ENCRYPTED")
+	state.Name = os.Getenv("NAME_ETH")
+	state.Chain = os.Getenv("CHAIN_ETH")
+	state.Address = os.Getenv("ADDRESS_ETH")
+	state.Key = os.Getenv("PRIVKEY_ENCRYPTED_ETH")
 	return &state
 }
 
@@ -61,10 +61,10 @@ func SaveConfig(st State) {
 	if err != nil {
 		curr = make(map[string]string)
 	}
-	curr["NAME"] = st.Name
-	curr["CHAIN"] = st.Chain
-	curr["ADDRESS"] = st.Address
-	curr["PRIVKEY_ENCRYPTED"] = st.Key
+	curr["NAME_ETH"] = st.Name
+	curr["CHAIN_ETH"] = st.Chain
+	curr["ADDRESS_ETH"] = st.Address
+	curr["PRIVKEY_ENCRYPTED_ETH"] = st.Key
 	godotenv.Write(curr, ".env")
 }
 

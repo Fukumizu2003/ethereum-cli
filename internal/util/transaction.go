@@ -62,7 +62,7 @@ func NewTx() Tx {
 func LoadTx() Tx {
 	MkdirOrNothing("temp")
 	var tx Tx
-	data, _ := os.ReadFile(RelativeToAbsolute("temp", "transaction.json"))
+	data, _ := os.ReadFile(RelativeToAbsolute("temp", "ETH_transaction.json"))
 	json.Unmarshal(data, &tx)
 	return tx
 }
@@ -73,7 +73,7 @@ func SaveTx(tx Tx) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	os.WriteFile(RelativeToAbsolute("temp", "transaction.json"), data, 0644)
+	os.WriteFile(RelativeToAbsolute("temp", "ETH_transaction.json"), data, 0644)
 }
 
 func InitNativeTx(tx *Tx, chain string) {

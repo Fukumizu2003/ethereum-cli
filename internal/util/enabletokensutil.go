@@ -87,12 +87,12 @@ func readTokenInfo(assetscol map[string]interface{}) (string, int, string, error
 
 func LoadTokensInfo() *map[string]map[string]map[string]interface{} {
 	var res map[string]map[string]map[string]interface{}
-	b, _ := os.ReadFile(RelativeToAbsolute("ref", "const.json"))
+	b, _ := os.ReadFile(RelativeToAbsolute("ref", "ETH_const.json"))
 	json.Unmarshal(b, &res)
 	return &res
 }
 
 func SaveTokensInfo(info *map[string]map[string]map[string]interface{}) {
 	buf, _ := json.MarshalIndent(*info, "", "    ")
-	os.WriteFile(RelativeToAbsolute("ref", "const.json"), buf, 0644)
+	os.WriteFile(RelativeToAbsolute("ref", "ETH_const.json"), buf, 0644)
 }

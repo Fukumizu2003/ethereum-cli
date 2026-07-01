@@ -14,7 +14,7 @@ func MkdirOrNothing(dir string) {
 
 func LoadAccounts() [][]string {
 	MkdirOrNothing("ref")
-	f, _ := os.Open(RelativeToAbsolute("ref", "keypair.csv"))
+	f, _ := os.Open(RelativeToAbsolute("ref", "ETH_keypair.csv"))
 	defer f.Close()
 	data, _ := csv.NewReader(f).ReadAll()
 	return data
@@ -22,7 +22,7 @@ func LoadAccounts() [][]string {
 
 func LoadDestinations() [][]string {
 	MkdirOrNothing("ref")
-	f, _ := os.Open(RelativeToAbsolute("ref", "destinations.csv"))
+	f, _ := os.Open(RelativeToAbsolute("ref", "ETH_destinations.csv"))
 	defer f.Close()
 	data, _ := csv.NewReader(f).ReadAll()
 	return data
@@ -64,7 +64,7 @@ func SaveKeypair(acname string, address string, priv []byte) {
 	row = append(row, byte(','))
 	row = append(row, []byte(privB64)...)
 	row = append(row, []byte("\n")...)
-	appendFile(RelativeToAbsolute("ref", "keypair.csv"), row)
+	appendFile(RelativeToAbsolute("ref", "ETH_keypair.csv"), row)
 }
 
 func SaveAddress(acname string, address string) {
@@ -74,7 +74,7 @@ func SaveAddress(acname string, address string) {
 	row = append(row, byte(','))
 	row = append(row, []byte(address)...)
 	row = append(row, byte('\n'))
-	appendFile(RelativeToAbsolute("ref", "destinations.csv"), row)
+	appendFile(RelativeToAbsolute("ref", "ETH_destinations.csv"), row)
 }
 
 func appendFile(path string, row []byte) {
@@ -98,7 +98,7 @@ func CheckName(acs [][]string, dss [][]string, name string) bool {
 }
 
 func SaveResp(data []byte) {
-	os.WriteFile(RelativeToAbsolute("temp", "resp.json"), data, 0644)
+	os.WriteFile(RelativeToAbsolute("temp", "ETH_resp.json"), data, 0644)
 }
 
 func ReadBaseFee(chaininfo []byte) (uint64, error) {
